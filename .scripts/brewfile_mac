@@ -1,0 +1,16 @@
+tap "homebrew/bundle"
+tap "homebrew/cask"
+tap "homebrew/core"
+
+brew "zsh"
+brew "neovim"
+brew "tmux"
+brew "docker"
+
+cask "google-chrome"
+cask "visual-studio-code"
+cask "miniconda"
+cask "alfred"
+cask "dash"
+cask "stats"
+cask "iterm2"

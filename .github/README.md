@@ -1,17 +1,21 @@
+# Dotfiles
+
 ### Prerequisites
+- git
 
-
-### Push to github
+### Create new git
 ```
 git init --bare $HOME/.dotfiles
-alias dotcfg='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
-dotcfg config --local status.showUntrackedFiles no
+alias dotgit='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+dotgit config --local status.showUntrackedFiles no
 ```
+next step: add, commit, push, ...
 
 ### Clone to new box
 ```
-git clone --bare <git-repo-url> $HOME/.dotfiles
-alias config='/usr/bin/git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+echo ".dotfiles" >> .gitignore
+git clone --bare git@github.com:kwonj/dotfiles.git $HOME/.dotfiles
+alias dotgit='/usr/bin/git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+dotgit config --local status.showUntrackedFiles no
 config checkout
-config config --local status.showUntrackedFiles no
 ```

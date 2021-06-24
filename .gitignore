@@ -1,0 +1,12 @@
+# MAC
+.DS_Store
+
+# IDE
+.ipynb_checkpoints/
+.vscode/
+
+# Python
+venv/
+.venv/
+__pycache__
+*.pyc
