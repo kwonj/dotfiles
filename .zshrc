@@ -113,5 +113,25 @@ source $ZSH/oh-my-zsh.sh
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+# miniconda -- if it is installed
+if [ -d "$HOME/.miniconda/" ]; then
+  # >>> conda initialize >>>
+  # !! Contents within this block are managed by 'conda init' !!
+  export CONDA_AUTO_ACTIVATE_BASE=false
+  __conda_setup="$('$HOME/.miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+  if [ $? -eq 0 ]; then
+      eval "$__conda_setup"
+  else
+      if [ -f "$HOME/.miniconda/etc/profile.d/conda.sh" ]; then
+          . "$HOME/.miniconda/etc/profile.d/conda.sh"
+      else
+          export PATH="$HOME/.miniconda/bin:$PATH"
+      fi
+  fi
+  unset __conda_setup
+  unset CONDA_AUTO_ACTIVATE_BASE
+  # <<< conda initialize <<<
+fi
+
 # dotfiles configuration(git)
 alias dotgit='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
