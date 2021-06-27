@@ -13,7 +13,6 @@ next step: add, commit, push, ...
 
 ### Clone to new box
 ```
-echo ".dotfiles" >> .gitignore
 git clone --bare https://github.com/kwonj/dotfiles.git $HOME/.dotfiles
 alias dotgit='/usr/bin/git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 dotgit config --local status.showUntrackedFiles no
