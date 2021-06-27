@@ -17,5 +17,5 @@ echo ".dotfiles" >> .gitignore
 git clone --bare https://github.com/kwonj/dotfiles.git $HOME/.dotfiles
 alias dotgit='/usr/bin/git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 dotgit config --local status.showUntrackedFiles no
-config checkout
+dotgit checkout
 ```
