@@ -1,3 +1,6 @@
+#!/usr/bin/sh
+# TODO: install zsh, tmux, and nvim locally
+
 APP_DIR="$HOME/.local"
 
 install_zsh() {
@@ -20,7 +23,6 @@ install_zsh() {
 install_tmux() {
     set -e
     # tmux
-    # TODO: install tmux from source
     if command -v tmux &> /dev/null; then
         echo "tmux is installed already."
     if command -v apt &> /dev/null; then
@@ -53,3 +55,14 @@ install_miniconda(){
     bash Miniconda3-latest-Linux-x86_64.sh -b -p "$HOME/.miniconda"
     popd
 }
+
+if [ -d "$HOME/.miniconda3" ]; then
+    echo "miniconda is installed in ~/.miniconda3. rename it to '.miniconda' or install manually."
+elif [ -d "$HOME/.miniconda" ]; then
+    echo "miniconda is installed already."
+else
+    install_miniconda
+fi
+
+# install oh-my-zsh and theme, plugins
+source $SCRIPT_DIR/zsh.sh
