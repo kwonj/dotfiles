@@ -25,7 +25,7 @@ install_tmux() {
     # tmux
     if command -v tmux &> /dev/null; then
         echo "tmux is installed already."
-    if command -v apt &> /dev/null; then
+    elif command -v apt &> /dev/null; then
         apt install tmux
     elif command -v yum &> /dev/null; then
         yum install tmux
