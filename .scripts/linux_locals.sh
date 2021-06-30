@@ -65,4 +65,7 @@ else
 fi
 
 # install oh-my-zsh and theme, plugins
-source $SCRIPT_DIR/zsh.sh
+source .scripts/zsh.sh
+
+# change default script to zsh
+chsh $(whoami) -s $(which zsh)
