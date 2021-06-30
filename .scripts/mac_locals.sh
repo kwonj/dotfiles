@@ -9,4 +9,4 @@ set -e
 brew bundle --file=$HOME/.scripts/brewfile_mac
 
 # install oh-my-zsh and theme, plugins
-source .scripts/zsh.sh
+source $HOME/.scripts/zsh.sh
