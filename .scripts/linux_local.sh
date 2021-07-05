@@ -64,6 +64,12 @@ else
     install_miniconda
 fi
 
+if [ -f "$HOME/.local/bin/nvim" ]; then
+    echo "neovim is installed in ~/.local/bin."
+else
+    install_neovim
+fi
+
 # install oh-my-zsh and theme, plugins
 source $HOME/.scripts/zsh.sh
 

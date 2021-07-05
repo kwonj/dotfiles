@@ -134,4 +134,7 @@ if [ -d "$HOME/.miniconda/" ]; then
 fi
 
 # dotfiles configuration(git)
-alias dotgit='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+alias dotgit="/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
+
+# locally installed binary
+export PATH="~/.local/bin/:$PATH"
