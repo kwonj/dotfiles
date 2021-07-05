@@ -34,7 +34,7 @@ install_tmux() {
     fi
 }
 
-install_nvim() {
+install_neovim() {
     set -e
     TEMP_DIR="/tmp/nvim/"
     mkdir -p $TEMP_DIR

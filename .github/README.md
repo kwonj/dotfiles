@@ -8,7 +8,7 @@ dotfiles managed by bare git
 ### Install
 It uses **git bare repository**
 ```
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/kwonj/dotfiles/master/.scripts/install.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/kwonj/dotfiles/master/.scripts/install.sh)"
 ```
 
 ### Next step
