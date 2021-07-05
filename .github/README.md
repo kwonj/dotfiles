@@ -3,14 +3,12 @@ dotfiles managed by bare git
 
 ### Prerequisites
 - git
+- curl
 
 ### Install
 It uses **git bare repository**
 ```
-git clone --bare https://github.com/kwonj/dotfiles.git $HOME/.dotfiles
-alias dotgit="/usr/bin/git --git-dir=$HOME/.dotfiles --work-tree=$HOME"
-dotgit config --local status.showUntrackedFiles no
-dotgit checkout
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/kwonj/dotfiles/master/.scripts/install.sh)"
 ```
 
 ### Next step
