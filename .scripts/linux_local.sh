@@ -70,4 +70,4 @@ source $HOME/.scripts/zsh.sh
 # change default script to zsh
 echo "Changing default script to zsh.."
 echo "chsh may require password."
-chsh $(whoami) -s $(which zsh)
+chsh $(whoami) -s $(command -v zsh)
