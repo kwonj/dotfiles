@@ -41,8 +41,9 @@ done
 
 # Install
 dotgit checkout
-echo -n "enter git user name: "; read git_username
-echo -n "enter git user email: "; read git_useremail
+echo "Setup git configure.."
+echo -n "Enter git user name: "; read git_username
+echo -n "Enter git user email: "; read git_useremail
 if [[ -n "$git_username" ]] && [[ -n "$git_useremail" ]]; then
   git config --file ~/.gitconfig.private user.name "$git_username"
   git config --file ~/.gitconfig.private user.email "$git_useremail"
