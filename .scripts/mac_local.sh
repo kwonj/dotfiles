@@ -8,8 +8,5 @@ set -e
 # install packages
 brew bundle --file=$HOME/.scripts/brewfile
 
-# link conda directory from homebrew to home directory
-ln -s /opt/homebrew/Caskroom/miniconda/base ~/.miniconda
-
 # install oh-my-zsh and theme, plugins
 source $HOME/.scripts/zsh.sh
