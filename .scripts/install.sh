@@ -7,11 +7,6 @@ set -e
 DOTFILES_PATH="$HOME/.dotfiles"
 DOTFILES_BACKUP_PATH="$HOME/.dotfiles.backup"
 
-if [ -e $DOTFILES_PATH ]; then
-  >&2 echo "$DOTFILES_PATH already exists. remove it first."
-  exit 1
-fi
-
 echo "Start installing dotfiles."
 echo
 echo "Install dotfiles from remote git repository:"
