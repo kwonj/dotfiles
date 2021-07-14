@@ -4,6 +4,8 @@
 # IDE
 .ipynb_checkpoints/
 .vscode/
+.devcontainer/
+.devcontainer.json
 
 # Python
 venv/
