@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/usr/bin/env bash
 # TODO: install zsh, tmux, and nvim locally
 
 APP_DIR="$HOME/.local"
