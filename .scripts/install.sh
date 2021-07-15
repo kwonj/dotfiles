@@ -43,6 +43,7 @@ for f in "${files[@]}"; do
 done
 
 # Install
+echo "Installing dotfiles.."
 dotgit checkout
 
 # Private files template
@@ -55,6 +56,7 @@ cat <<EOF > $HOME/.gitconfig.private
 #     email = "YOUR EMAIL"
 EOF
 
+echo "Installing OS packages.."
 # Install OS applications/packages
 if [ `uname` == "Linux" ];  then
   $HOME/.scripts/linux_local.sh
@@ -63,7 +65,7 @@ elif [ `uname` == "Darwin" ]; then
 fi
 
 
-echo "Install zsh plugins & themes.."
+echo "Installing zsh plugins & themes.."
 if [[ -d "$HOME/.oh-my-zsh" ]]; then
   echo "Pre-installed oh-my-zsh is found!"
   mkdir -p $DOTFILES_BACKUP_PATH && mv "$HOME/.oh-my-zsh" $DOTFILES_BACKUP_PATH \
