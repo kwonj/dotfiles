@@ -47,13 +47,14 @@ install_neovim() {
     if [ -f "$HOME/.local/bin/nvim" ]; then
         echo "neovim is installed in ~/.local/bin."
     else
-        TEMP_DIR="/tmp/nvim/"
+        TEMP_DIR=$(mktemp -d -t neovim-XXXXXXXXXX)
         mkdir -p $TEMP_DIR
         pushd $TEMP_DIR
         NVIM_VERSION="v0.4.4"
         curl -L -O -C - "https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux64.tar.gz"
         tar xzvf nvim-linux64.tar.gz
         cp -RT nvim-linux64/ $APP_DIR
+        rm -rf $TEMP_DIR
         popd
     fi
 }
@@ -64,11 +65,12 @@ install_miniconda(){
     elif [ -d "$HOME/.miniconda" ]; then
         echo "miniconda is installed already."
     else
-        TEMP_DIR="/tmp/miniconda/"
+        TEMP_DIR=$(mktemp -d -t miniconda-XXXXXXXXXX)
         mkdir -p $TEMP_DIR
         pushd $TEMP_DIR
         curl -L -O -C - https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
         bash Miniconda3-latest-Linux-x86_64.sh -b -p "$HOME/.miniconda"
+        rm -rf $TEMP_DIR
         popd
     fi
 }
