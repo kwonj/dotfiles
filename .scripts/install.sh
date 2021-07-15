@@ -68,6 +68,7 @@ if [[ -d "$HOME/.oh-my-zsh" ]]; then
   echo "Pre-installed oh-my-zsh is found!"
   mkdir -p $DOTFILES_BACKUP_PATH && mv "$HOME/.oh-my-zsh" $DOTFILES_BACKUP_PATH \
     && echo "> Backing up: $HOME/.oh-my-zsh/ ==> $DOTFILES_BACKUP_PATH/.oh-my-zsh/"
+fi
 
 # oh-my-zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
