@@ -17,7 +17,10 @@ dotgit config --local status.showUntrackedFiles no
 # Backup already existing dotfiles
 echo
 echo "Backup already existing dotfiles.."
+
 files=($(dotgit ls-tree -r HEAD | awk '{print $NF}'))
+files+=(".gitconfig.private") # files not tracked(personal information, ...)
+
 for f in "${files[@]}"; do
   # File at root ==> back up file
   if [[ $(basename "$f") = "$f" ]]; then
@@ -36,15 +39,16 @@ done
 
 # Install
 dotgit checkout
-echo "Setup git configure.."
-echo -n "Enter git user name: "; read git_username
-echo -n "Enter git user email: "; read git_useremail
-if [[ -n "$git_username" ]] && [[ -n "$git_useremail" ]]; then
-  git config --file ~/.gitconfig.private user.name "$git_username"
-  git config --file ~/.gitconfig.private user.email "$git_useremail"
-else
-  exit 1;
-fi
+
+# private files template
+cat <<EOF > $HOME/.gitconfig.private
+# git configuration for personal information(username, email, ...)
+# Uncomment below and fill your information
+#
+# [user]
+#     name = "YOUR NAME"
+#     email = "YOUR EMAIL"
+EOF
 
 echo
 echo "Install finished. The following dotfiles have been installed to $HOME:"
