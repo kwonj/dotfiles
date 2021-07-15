@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# TODO: install zsh, tmux, and nvim locally
+# TODO: install zsh, tmux locally
+
+set -e
 
 APP_DIR="$HOME/.local"
 
 install_zsh() {
-    set -e
-    # zsh
     # TODO: install zsh from source
     if command -v zsh &> /dev/null; then
         echo "zsh is installed already."
@@ -15,13 +15,22 @@ install_zsh() {
         yum install zsh
     elif command -v brew &> /dev/null; then
         brew install zsh
+    else
+        echo "cannot install zsh. stop"; exit 1
     fi
 
-    chsh -s /bin/zsh
+    # change default shell to zsh
+    if [[ ! "$SHELL" = *zsh ]]; then
+        echo "Changing default script to zsh.."
+        cat <<EOF >> $HOME/.profile
+[ -f $(command -v zsh) ] && exec $(command -v zsh) -l
+EOF
+        echo "Done - modified ~/.profile"
+        echo "If you change default shell manually, run: chsh $(whoami) -s $(command -v zsh)."
+    fi
 }
 
 install_tmux() {
-    set -e
     # tmux
     if command -v tmux &> /dev/null; then
         echo "tmux is installed already."
@@ -35,45 +44,36 @@ install_tmux() {
 }
 
 install_neovim() {
-    set -e
-    TEMP_DIR="/tmp/nvim/"
-    mkdir -p $TEMP_DIR
-    pushd $TEMP_DIR
-    NVIM_VERSION="v0.4.4"
-    curl -L -O -C - "https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux64.tar.gz"
-    tar xzvf nvim-linux64.tar.gz
-    cp -RT nvim-linux64/ $APP_DIR
-    popd
+    if [ -f "$HOME/.local/bin/nvim" ]; then
+        echo "neovim is installed in ~/.local/bin."
+    else
+        TEMP_DIR="/tmp/nvim/"
+        mkdir -p $TEMP_DIR
+        pushd $TEMP_DIR
+        NVIM_VERSION="v0.4.4"
+        curl -L -O -C - "https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux64.tar.gz"
+        tar xzvf nvim-linux64.tar.gz
+        cp -RT nvim-linux64/ $APP_DIR
+        popd
+    fi
 }
 
 install_miniconda(){
-    set -e
-    TEMP_DIR="/tmp/miniconda/"
-    mkdir -p $TEMP_DIR
-    pushd $TEMP_DIR
-    curl -L -O -C - https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-    bash Miniconda3-latest-Linux-x86_64.sh -b -p "$HOME/.miniconda"
-    popd
+    if [ -d "$HOME/.miniconda3" ]; then
+        echo "miniconda is installed in ~/.miniconda3. rename it to '.miniconda' or install manually."
+    elif [ -d "$HOME/.miniconda" ]; then
+        echo "miniconda is installed already."
+    else
+        TEMP_DIR="/tmp/miniconda/"
+        mkdir -p $TEMP_DIR
+        pushd $TEMP_DIR
+        curl -L -O -C - https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        bash Miniconda3-latest-Linux-x86_64.sh -b -p "$HOME/.miniconda"
+        popd
+    fi
 }
 
-if [ -d "$HOME/.miniconda3" ]; then
-    echo "miniconda is installed in ~/.miniconda3. rename it to '.miniconda' or install manually."
-elif [ -d "$HOME/.miniconda" ]; then
-    echo "miniconda is installed already."
-else
-    install_miniconda
-fi
-
-if [ -f "$HOME/.local/bin/nvim" ]; then
-    echo "neovim is installed in ~/.local/bin."
-else
-    install_neovim
-fi
-
-# install oh-my-zsh and theme, plugins
-source $HOME/.scripts/zsh.sh
-
-# change default script to zsh
-echo "Changing default script to zsh.."
-echo "chsh may require password."
-chsh $(whoami) -s $(command -v zsh)
+# install packages
+install_zsh
+install_miniconda
+install_neovim

@@ -4,6 +4,11 @@
 
 set -e
 
+# Run on MacOS or Linux only
+if [ `uname` != "Darwin" ] && [ `uname` != "Linux" ] ; then
+  echo "Run on MacOS or Linux"; exit 1
+fi
+
 DOTFILES_PATH="$HOME/.dotfiles"
 DOTFILES_BACKUP_PATH="$HOME/.dotfiles.backup"
 
@@ -40,7 +45,7 @@ done
 # Install
 dotgit checkout
 
-# private files template
+# Private files template
 cat <<EOF > $HOME/.gitconfig.private
 # git configuration for personal information(username, email, ...)
 # Uncomment below and fill your information
@@ -50,6 +55,34 @@ cat <<EOF > $HOME/.gitconfig.private
 #     email = "YOUR EMAIL"
 EOF
 
+# Install OS applications/packages
+if [ `uname` == "Linux" ];  then
+  $HOME/.scripts/linux_local.sh
+elif [ `uname` == "Darwin" ]; then
+  $HOME/.scripts/mac_local.sh
+fi
+
+
+echo "Install zsh plugins & themes.."
+if [[ -d "$HOME/.oh-my-zsh" ]]; then
+  echo "Pre-installed oh-my-zsh is found!"
+  mkdir -p $DOTFILES_BACKUP_PATH && mv "$HOME/.oh-my-zsh" $DOTFILES_BACKUP_PATH \
+    && echo "> Backing up: $HOME/.oh-my-zsh/ ==> $DOTFILES_BACKUP_PATH/.oh-my-zsh/"
+
+# oh-my-zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
+  "" --unattended --keep-zshrc
+# powerlevel10k
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
+  ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+# zsh-autosuggestions
+git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions \
+  ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+# zsh-syntax-highlighting
+git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git \
+  ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+
 echo
 echo "Install finished. The following dotfiles have been installed to $HOME:"
 printf '    %s\n' "${files[@]}"
+printf '    .oh-my-zsh/\n'

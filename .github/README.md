@@ -4,15 +4,14 @@ dotfiles managed by bare git
 ### Prerequisites
 - git
 - curl
+- zsh (installing zsh is not fully implemented)
+- miniconda (optional)
 
 ### Install
 It uses **git bare repository**
 ```
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/kwonj/dotfiles/master/.scripts/install.sh)"
 ```
-
-### Next step
-run `linux_locals.sh` or `mac_locals.sh` in `.scripts` to install packages
 
 ### Help
 - when **Nerd Font** is not installed

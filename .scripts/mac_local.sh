@@ -7,6 +7,3 @@ set -e
 
 # install packages
 brew bundle --file=$HOME/.scripts/brewfile
-
-# install oh-my-zsh and theme, plugins
-source $HOME/.scripts/zsh.sh
