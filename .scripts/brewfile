@@ -8,6 +8,7 @@ brew "tmux"
 brew "docker"
 
 cask "google-chrome"
+cask "firefox"
 cask "visual-studio-code"
 cask "iterm2"
 cask "alfred"
