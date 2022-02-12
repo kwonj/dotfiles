@@ -15,3 +15,5 @@ cask "alfred"
 cask "dash"
 cask "stats"
 cask "dropbox"
+cask "karabiner-elements"
+
