@@ -6,7 +6,6 @@ brew "zsh"
 brew "neovim"
 brew "tmux"
 
-cask "docker"
 cask "google-chrome"
 cask "firefox"
 cask "visual-studio-code"
@@ -17,5 +16,4 @@ cask "stats"
 cask "dropbox"
 cask "karabiner-elements"
 cask "postman"
-cask "obsidian"
 
