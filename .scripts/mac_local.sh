@@ -7,3 +7,7 @@ set -e
 
 # install packages
 brew bundle --file=$HOME/.scripts/brewfile
+
+# additional setup
+yes | $(brew --prefix)/opt/fzf/install
+

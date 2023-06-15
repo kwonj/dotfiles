@@ -138,3 +138,9 @@ alias dotgit="/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
 
 # locally installed binary
 export PATH="$HOME/.local/bin/:$PATH"
+
+# direnv hooking
+eval "$(direnv hook zsh)"
+
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
