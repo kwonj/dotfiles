@@ -91,7 +91,7 @@ for asset in J[0]['assets']:
         if [[ $filename == *.tar.gz ]]; then
             tar -xzf $filename -C $APP_DIR/cellar/$name
         else
-            cp $filename $APP_DIR/cellar/$name
+            cp $filename $APP_DIR/cellar/$name/$name
         fi
 
         rm -rf $TEMP_DIR
