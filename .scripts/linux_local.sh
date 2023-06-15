@@ -113,19 +113,19 @@ install_direnv() {
 
 install_fzf() {
     local app_name="fzf"
-    install_latest_app_from_github app_name "junegunn/fzf" "fzf-*-linux_amd64.tar.gz"
+    install_latest_app_from_github $app_name "junegunn/fzf" "fzf-*-linux_amd64.tar.gz"
     ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
 }
 
 install_lazydocker() {
     local app_name="lazydocker"
-    install_latest_app_from_github app_name "jesseduffield/lazydocker" "lazydocker_*_Linux_x86_64.tar.gz"
+    install_latest_app_from_github $app_name "jesseduffield/lazydocker" "lazydocker_*_Linux_x86_64.tar.gz"
     ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
 }
 
 install_lazygit() {
     local app_name="lazygit"
-    install_latest_app_from_github app_name "jesseduffield/lazygit" "lazygit_*_Linux_x86_64.tar.gz"
+    install_latest_app_from_github $app_name "jesseduffield/lazygit" "lazygit_*_Linux_x86_64.tar.gz"
     ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
 }
 
