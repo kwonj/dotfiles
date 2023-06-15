@@ -3,7 +3,8 @@
 
 set -e
 
-APP_DIR="$HOME/.local/bin"
+APP_DIR="$HOME/.local"
+mkdir -p $APP_DIR/bin
 
 install_zsh() {
     # TODO: install zsh from source
@@ -66,11 +67,11 @@ install_latest_app_from_github() {
     local filename=$3
 
     if [ -f "$HOME/.local/bin/$name" ]; then
-        echo "$name is installed in ~/.local/bin."
+        echo "$name is installed in ~/.local/bin"
     else
         local download_url=$(\
             curl -L https://api.github.com/repos/${repo}/releases 2>/dev/null | \
-            python -c "\
+            python3 -c "\
 import json, sys, fnmatch;
 J = json.load(sys.stdin);
 for asset in J[0]['assets']:
@@ -86,45 +87,51 @@ for asset in J[0]['assets']:
         pushd $TEMP_DIR
         curl -L -o $filename -C - $download_url
 
+        mkdir -p $APP_DIR/cellar/$name
         if [[ $filename == *.tar.gz ]]; then
-            tar -xzvf $filename -C $name
-        elif [[ $filename == *.tar ]]; then
-            tar -xvf $filename -C $name
-        elif [[ $filename == *.appimage ]]; then
-            echo "Not implemented"
+            tar -xzf $filename -C $APP_DIR/cellar/$name
+        else
+            cp $filename $APP_DIR/cellar/$name
         fi
 
-        cp $name/* $APP_DIR
         rm -rf $TEMP_DIR
         popd
     fi
-
 }
 
 install_neovim() {
-    install_latest_app_from_github "nvim" "neovim/neovim" "nvim-*-x86_64.tar.gz"
-    ln -sf nvim-linux64/bin/nvim $APP_DIR/nvim
+    local app_name="nvim"
+    install_latest_app_from_github $app_name "neovim/neovim" "nvim-linux64.tar.gz"
+    ln -sf $APP_DIR/cellar/$app_name/nvim-linux64/bin/$app_name $APP_DIR/bin/$app_name
 }
 
 install_direnv() {
-    install_latest_app_from_github "direnv" "direnv/direnv" "direnv.linux-amd64"
+    local app_name="direnv"
+    install_latest_app_from_github $app_name "direnv/direnv" "direnv.linux-amd64"
+    ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
 }
 
 install_fzf() {
-    install_latest_app_from_github "fzf" "junegunn/fzf" "fzf-*-linux_amd64.tar.gz"
+    local app_name="fzf"
+    install_latest_app_from_github app_name "junegunn/fzf" "fzf-*-linux_amd64.tar.gz"
+    ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
 }
 
 install_lazydocker() {
-    install_latest_app_from_github "lazydocker" "jesseduffield/lazydocker" "lazydocker_*.tar.gz"
+    local app_name="lazydocker"
+    install_latest_app_from_github app_name "jesseduffield/lazydocker" "lazydocker_*_Linux_x86_64.tar.gz"
+    ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
 }
 
 install_lazygit() {
-    install_latest_app_from_github "lazygit" "jesseduffield/lazygit" "lazygit_*.tar.gz"
+    local app_name="lazygit"
+    install_latest_app_from_github app_name "jesseduffield/lazygit" "lazygit_*_Linux_x86_64.tar.gz"
+    ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
 }
 
 # install packages
-install_zsh
-install_miniconda
+# install_zsh
+# install_miniconda
 install_neovim
 install_direnv
 install_fzf
