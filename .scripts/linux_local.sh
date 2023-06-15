@@ -71,7 +71,7 @@ install_latest_app_from_github() {
     else
         local download_url=$(\
             curl -L https://api.github.com/repos/${repo}/releases 2>/dev/null | \
-            python3 -c "\
+            python -c "\
 import json, sys, fnmatch;
 J = json.load(sys.stdin);
 for asset in J[0]['assets']:
@@ -130,8 +130,8 @@ install_lazygit() {
 }
 
 # install packages
-# install_zsh
-# install_miniconda
+install_zsh
+install_miniconda
 install_neovim
 install_direnv
 install_fzf
