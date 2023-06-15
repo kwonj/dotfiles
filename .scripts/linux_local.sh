@@ -108,6 +108,7 @@ install_neovim() {
 install_direnv() {
     local app_name="direnv"
     install_latest_app_from_github $app_name "direnv/direnv" "direnv.linux-amd64"
+    chmod +x $APP_DIR/cellar/$app_name/$app_name
     ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
 }
 
