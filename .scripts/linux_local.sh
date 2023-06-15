@@ -74,8 +74,8 @@ install_latest_app_from_github() {
 import json, sys, fnmatch;
 J = json.load(sys.stdin);
 for asset in J[0]['assets']:
-if fnmatch.fnmatch(asset['name'], '$filename'):
-    print(asset['browser_download_url'])
+    if fnmatch.fnmatch(asset['name'], '$filename'):
+        print(asset['browser_download_url'])
 ")
         echo -e "download_url = $download_url"
         test -n $download_url
