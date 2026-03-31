@@ -1,91 +1,174 @@
 #!/usr/bin/env bash
 
-# refer to: https://gist.github.com/weibeld/869f723063811e5088708a9386bf52bf#file-dotfiles-install-sh
+set -euo pipefail
 
-set -e
+DOTFILES_REPO_URL="https://github.com/kwonj/dotfiles.git"
+DOTFILES_PATH="${HOME}/.dotfiles"
+DOTFILES_BACKUP_ROOT="${HOME}/.dotfiles.backup"
+PRIVATE_GITCONFIG_PATH="${HOME}/.gitconfig.private"
 
-# Run on MacOS or Linux only
-if [ `uname` != "Darwin" ] && [ `uname` != "Linux" ] ; then
-  echo "Run on MacOS or Linux"; exit 1
-fi
+log() {
+  printf '%s\n' "$*"
+}
 
-DOTFILES_PATH="$HOME/.dotfiles"
-DOTFILES_BACKUP_PATH="$HOME/.dotfiles.backup"
+warn() {
+  printf 'warning: %s\n' "$*" >&2
+}
 
-echo "Start installing dotfiles."
-echo
-echo "Install dotfiles from remote git repository:"
-git clone --bare https://github.com/kwonj/dotfiles.git $DOTFILES_PATH
-dotgit() { /usr/bin/git --git-dir=$DOTFILES_PATH --work-tree=$HOME "$@"; }
-dotgit config --local status.showUntrackedFiles no
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
 
-# Backup already existing dotfiles
-echo
-echo "Backup already existing dotfiles.."
+dotgit() {
+  /usr/bin/git --git-dir="${DOTFILES_PATH}" --work-tree="${HOME}" "$@"
+}
 
-files=($(dotgit ls-tree -r HEAD | awk '{print $NF}'))
-files+=(".gitconfig.private") # files not tracked(personal information, ...)
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
+}
 
-for f in "${files[@]}"; do
-  # File at root ==> back up file
-  if [[ $(basename "$f") = "$f" ]]; then
-    [[ -f "$HOME/$f" ]] && mkdir -p $DOTFILES_BACKUP_PATH && mv "$HOME/$f" $DOTFILES_BACKUP_PATH \
-      && echo "> Backing up: $HOME/$f ==> $DOTFILES_BACKUP_PATH/$f"
-  # File in nested directory ==> back up outermost directory
-  else
-    d=${f%%/*}
-    if [[ -d "$HOME/$d" ]]; then
-      [[ -d "$DOTFILES_BACKUP_PATH/$d" ]] && rm -rf "$DOTFILES_BACKUP_PATH/$d"
-      mkdir -p $DOTFILES_BACKUP_PATH && mv "$HOME/$d" $DOTFILES_BACKUP_PATH \
-        && echo "> Backing up: $HOME/$d/ ==> $DOTFILES_BACKUP_PATH/$d/"
+detect_os() {
+  case "$(uname -s)" in
+    Darwin|Linux) ;;
+    *) die "this installer supports macOS and Linux only" ;;
+  esac
+}
+
+clone_dotfiles_repo() {
+  if [ -d "${DOTFILES_PATH}" ]; then
+    if dotgit rev-parse --is-bare-repository >/dev/null 2>&1; then
+      log "Reusing existing bare repository at ${DOTFILES_PATH}"
+      return
     fi
+
+    die "${DOTFILES_PATH} exists but is not a usable bare Git repository"
   fi
-done
 
-# Install
-echo "Installing dotfiles.."
-dotgit checkout
+  log "Cloning bare repository into ${DOTFILES_PATH}"
+  git clone --bare "${DOTFILES_REPO_URL}" "${DOTFILES_PATH}"
+}
 
-# Private files template
-cat <<EOF > $HOME/.gitconfig.private
-# git configuration for personal information(username, email, ...)
-# Uncomment below and fill your information
+configure_dotfiles_repo() {
+  dotgit config --local status.showUntrackedFiles no
+}
+
+tracked_files() {
+  dotgit ls-tree -r --name-only HEAD
+}
+
+backup_conflicting_files() {
+  local backup_dir
+  local path
+  local target
+
+  backup_dir="${DOTFILES_BACKUP_ROOT}/$(date +%Y%m%d%H%M%S)"
+
+  while IFS= read -r path; do
+    [ -n "${path}" ] || continue
+    target="${HOME}/${path}"
+
+    if [ ! -e "${target}" ]; then
+      continue
+    fi
+
+    mkdir -p "${backup_dir}/$(dirname "${path}")"
+    mv "${target}" "${backup_dir}/${path}"
+    log "Backed up ${target} -> ${backup_dir}/${path}"
+  done < <(tracked_files)
+
+  if [ -e "${PRIVATE_GITCONFIG_PATH}" ]; then
+    mkdir -p "${backup_dir}"
+    mv "${PRIVATE_GITCONFIG_PATH}" "${backup_dir}/.gitconfig.private"
+    log "Backed up ${PRIVATE_GITCONFIG_PATH} -> ${backup_dir}/.gitconfig.private"
+  fi
+}
+
+checkout_dotfiles() {
+  log "Checking out tracked files into ${HOME}"
+  dotgit checkout
+}
+
+ensure_private_gitconfig_template() {
+  if [ -e "${PRIVATE_GITCONFIG_PATH}" ]; then
+    return
+  fi
+
+  cat > "${PRIVATE_GITCONFIG_PATH}" <<'EOF'
+# git configuration for personal information
 #
 # [user]
 #     name = "YOUR NAME"
 #     email = "YOUR EMAIL"
 EOF
+}
 
-echo "Installing OS packages.."
-# Install OS applications/packages
-if [ `uname` == "Linux" ];  then
-  $HOME/.scripts/linux_local.sh
-elif [ `uname` == "Darwin" ]; then
-  $HOME/.scripts/mac_local.sh
-fi
+run_os_bootstrap() {
+  case "$(uname -s)" in
+    Darwin) "${HOME}/.scripts/mac_local.sh" ;;
+    Linux) "${HOME}/.scripts/linux_local.sh" ;;
+  esac
+}
 
+install_oh_my_zsh() {
+  if [ ! -d "${HOME}/.oh-my-zsh" ]; then
+    log "Installing Oh My Zsh"
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
+      "" --unattended --keep-zshrc
+  else
+    log "Reusing existing Oh My Zsh installation"
+  fi
+}
 
-echo "Installing zsh plugins & themes.."
-if [[ -d "$HOME/.oh-my-zsh" ]]; then
-  echo "Pre-installed oh-my-zsh is found!"
-  mkdir -p $DOTFILES_BACKUP_PATH && mv "$HOME/.oh-my-zsh" $DOTFILES_BACKUP_PATH \
-    && echo "> Backing up: $HOME/.oh-my-zsh/ ==> $DOTFILES_BACKUP_PATH/.oh-my-zsh/"
-fi
+install_plugin_repo() {
+  local repo_url="$1"
+  local destination="$2"
 
-# oh-my-zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
-  "" --unattended --keep-zshrc
-# powerlevel10k
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
-  ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-# zsh-autosuggestions
-git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions \
-  ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-# zsh-syntax-highlighting
-git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git \
-  ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+  if [ -d "${destination}" ]; then
+    log "Reusing ${destination}"
+    return
+  fi
 
-echo
-echo "Install finished. The following dotfiles have been installed to $HOME:"
-printf '    %s\n' "${files[@]}"
-printf '    .oh-my-zsh/\n'
+  git clone --depth=1 "${repo_url}" "${destination}"
+}
+
+install_shell_plugins() {
+  local zsh_custom
+
+  install_oh_my_zsh
+
+  zsh_custom="${ZSH_CUSTOM:-${HOME}/.oh-my-zsh/custom}"
+  install_plugin_repo \
+    "https://github.com/romkatv/powerlevel10k.git" \
+    "${zsh_custom}/themes/powerlevel10k"
+  install_plugin_repo \
+    "https://github.com/zsh-users/zsh-autosuggestions" \
+    "${zsh_custom}/plugins/zsh-autosuggestions"
+  install_plugin_repo \
+    "https://github.com/zsh-users/zsh-syntax-highlighting.git" \
+    "${zsh_custom}/plugins/zsh-syntax-highlighting"
+}
+
+main() {
+  require_command git
+  require_command curl
+  detect_os
+  clone_dotfiles_repo
+  configure_dotfiles_repo
+
+  if ! [ -f "${HOME}/.zshrc" ] || ! dotgit ls-files --error-unmatch .zshrc >/dev/null 2>&1; then
+    backup_conflicting_files
+    checkout_dotfiles
+  else
+    log "Tracked files appear to be checked out already; skipping checkout"
+  fi
+
+  ensure_private_gitconfig_template
+  run_os_bootstrap
+  install_shell_plugins
+
+  log
+  log "Install finished."
+}
+
+main "$@"

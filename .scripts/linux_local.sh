@@ -1,140 +1,174 @@
 #!/usr/bin/env bash
-# TODO: install zsh, tmux locally
 
-set -e
+set -euo pipefail
 
-APP_DIR="$HOME/.local"
-mkdir -p $APP_DIR/bin
+APP_DIR="${HOME}/.local"
+BIN_DIR="${APP_DIR}/bin"
+CELLAR_DIR="${APP_DIR}/cellar"
+MINICONDA_DIR="${HOME}/.miniconda"
 
-install_zsh() {
-    # TODO: install zsh from source
-    if command -v zsh &> /dev/null; then
-        echo "zsh is installed already."
-    elif command -v apt &> /dev/null; then
-        apt install zsh
-    elif command -v yum &> /dev/null; then
-        yum install zsh
-    elif command -v brew &> /dev/null; then
-        brew install zsh
-    else
-        echo "cannot install zsh. stop"; exit 1
-    fi
-
-    # change default shell to zsh
-    if [[ ! "$SHELL" = *zsh ]]; then
-        echo "Changing default script to zsh.."
-        cat <<EOF >> $HOME/.profile
-[ -f $(command -v zsh) ] && exec $(command -v zsh) -l
-EOF
-        echo "Done - modified ~/.profile"
-        echo "If you change default shell manually, run: chsh $(whoami) -s $(command -v zsh)."
-    fi
+log() {
+  printf '%s\n' "$*"
 }
 
-install_tmux() {
-    # tmux
-    if command -v tmux &> /dev/null; then
-        echo "tmux is installed already."
-    elif command -v apt &> /dev/null; then
-        apt install tmux
-    elif command -v yum &> /dev/null; then
-        yum install tmux
-    elif command -v brew &> /dev/null; then
-        brew install tmux
-    fi
+warn() {
+  printf 'warning: %s\n' "$*" >&2
 }
 
-
-install_miniconda(){
-    if [ -d "$HOME/.miniconda3" ]; then
-        echo "miniconda is installed in ~/.miniconda3. rename it to '.miniconda' or install manually."
-    elif [ -d "$HOME/.miniconda" ]; then
-        echo "miniconda is installed already."
-    else
-        TEMP_DIR=$(mktemp -d -t miniconda-XXXXXXXXXX)
-        mkdir -p $TEMP_DIR
-        pushd $TEMP_DIR
-        curl -L -O -C - https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-        bash Miniconda3-latest-Linux-x86_64.sh -b -p "$HOME/.miniconda"
-        rm -rf $TEMP_DIR
-        popd
-    fi
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
 }
 
-install_latest_app_from_github() {
-    local name=$1
-    local repo=$2
-    local filename=$3
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
+}
 
-    if [ -f "$HOME/.local/bin/$name" ]; then
-        echo "$name is installed in ~/.local/bin"
-    else
-        local download_url=$(\
-            curl -L https://api.github.com/repos/${repo}/releases 2>/dev/null | \
-            python -c "\
-import json, sys, fnmatch;
-J = json.load(sys.stdin);
-for asset in J[0]['assets']:
-    if fnmatch.fnmatch(asset['name'], '$filename'):
-        print(asset['browser_download_url'])
-")
-        echo -e "download_url = $download_url"
-        test -n $download_url
-        sleep 0.5
+ensure_directories() {
+  mkdir -p "${BIN_DIR}" "${CELLAR_DIR}"
+}
 
-        TEMP_DIR=$(mktemp -d -t $name-XXXXXXXXXX)
-        mkdir -p $TEMP_DIR
-        pushd $TEMP_DIR
-        curl -L -o $filename -C - $download_url
+warn_manual_prerequisites() {
+  command -v zsh >/dev/null 2>&1 || warn "zsh is not installed; install it manually before using these dotfiles as your login shell"
+  command -v tmux >/dev/null 2>&1 || warn "tmux is not installed; install it manually if you want terminal multiplexer support"
+}
 
-        mkdir -p $APP_DIR/cellar/$name
-        if [[ $filename == *.tar.gz ]]; then
-            tar -xzf $filename -C $APP_DIR/cellar/$name
-        else
-            cp $filename $APP_DIR/cellar/$name/$name
-        fi
+latest_release_asset_url() {
+  local repo="$1"
+  local pattern="$2"
 
-        rm -rf $TEMP_DIR
-        popd
-    fi
+  curl -fsSL "https://api.github.com/repos/${repo}/releases/latest" | \
+    python3 -c '
+import fnmatch
+import json
+import sys
+
+data = json.load(sys.stdin)
+pattern = sys.argv[1]
+for asset in data.get("assets", []):
+    name = asset.get("name", "")
+    if fnmatch.fnmatch(name, pattern):
+        print(asset["browser_download_url"])
+        break
+' "${pattern}"
+}
+
+download_to_temp() {
+  local url="$1"
+  local output_name="$2"
+  local temp_dir
+
+  temp_dir="$(mktemp -d)"
+  curl -fL --retry 3 --output "${temp_dir}/${output_name}" "${url}"
+  printf '%s\n' "${temp_dir}"
+}
+
+install_archive_binary() {
+  local name="$1"
+  local repo="$2"
+  local asset_pattern="$3"
+  local extracted_binary="$4"
+
+  local url
+  local temp_dir
+  local install_dir
+
+  if [ -x "${BIN_DIR}/${name}" ]; then
+    log "${name} is already installed"
+    return
+  fi
+
+  url="$(latest_release_asset_url "${repo}" "${asset_pattern}")"
+  [ -n "${url}" ] || die "failed to locate release asset for ${name}"
+
+  temp_dir="$(download_to_temp "${url}" "${name}.tar.gz")"
+  install_dir="${CELLAR_DIR}/${name}"
+  rm -rf "${install_dir}"
+  mkdir -p "${install_dir}"
+  tar -xzf "${temp_dir}/${name}.tar.gz" -C "${install_dir}"
+  ln -sf "${install_dir}/${extracted_binary}" "${BIN_DIR}/${name}"
+  rm -rf "${temp_dir}"
+}
+
+install_standalone_binary() {
+  local name="$1"
+  local repo="$2"
+  local asset_pattern="$3"
+
+  local url
+  local temp_dir
+  local install_dir
+
+  if [ -x "${BIN_DIR}/${name}" ]; then
+    log "${name} is already installed"
+    return
+  fi
+
+  url="$(latest_release_asset_url "${repo}" "${asset_pattern}")"
+  [ -n "${url}" ] || die "failed to locate release asset for ${name}"
+
+  temp_dir="$(download_to_temp "${url}" "${name}")"
+  install_dir="${CELLAR_DIR}/${name}"
+  rm -rf "${install_dir}"
+  mkdir -p "${install_dir}"
+  mv "${temp_dir}/${name}" "${install_dir}/${name}"
+  chmod +x "${install_dir}/${name}"
+  ln -sf "${install_dir}/${name}" "${BIN_DIR}/${name}"
+  rm -rf "${temp_dir}"
+}
+
+install_miniconda() {
+  local installer_url
+  local temp_dir
+
+  if [ -d "${HOME}/.miniconda3" ]; then
+    warn "found ~/.miniconda3; rename it to ~/.miniconda or install Miniconda manually"
+    return
+  fi
+
+  if [ -d "${MINICONDA_DIR}" ]; then
+    log "Miniconda is already installed"
+    return
+  fi
+
+  installer_url="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+  temp_dir="$(download_to_temp "${installer_url}" "miniconda.sh")"
+  bash "${temp_dir}/miniconda.sh" -b -p "${MINICONDA_DIR}"
+  rm -rf "${temp_dir}"
 }
 
 install_neovim() {
-    local app_name="nvim"
-    install_latest_app_from_github $app_name "neovim/neovim" "nvim-linux64.tar.gz"
-    ln -sf $APP_DIR/cellar/$app_name/nvim-linux64/bin/$app_name $APP_DIR/bin/$app_name
+  install_archive_binary "nvim" "neovim/neovim" "nvim-linux64.tar.gz" "nvim-linux64/bin/nvim"
 }
 
 install_direnv() {
-    local app_name="direnv"
-    install_latest_app_from_github $app_name "direnv/direnv" "direnv.linux-amd64"
-    chmod +x $APP_DIR/cellar/$app_name/$app_name
-    ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
+  install_standalone_binary "direnv" "direnv/direnv" "direnv.linux-amd64"
 }
 
 install_fzf() {
-    local app_name="fzf"
-    install_latest_app_from_github $app_name "junegunn/fzf" "fzf-*-linux_amd64.tar.gz"
-    ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
+  install_archive_binary "fzf" "junegunn/fzf" "fzf-*-linux_amd64.tar.gz" "fzf"
 }
 
 install_lazydocker() {
-    local app_name="lazydocker"
-    install_latest_app_from_github $app_name "jesseduffield/lazydocker" "lazydocker_*_Linux_x86_64.tar.gz"
-    ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
+  install_archive_binary "lazydocker" "jesseduffield/lazydocker" "lazydocker_*_Linux_x86_64.tar.gz" "lazydocker"
 }
 
 install_lazygit() {
-    local app_name="lazygit"
-    install_latest_app_from_github $app_name "jesseduffield/lazygit" "lazygit_*_Linux_x86_64.tar.gz"
-    ln -sf $APP_DIR/cellar/$app_name/$app_name $APP_DIR/bin/$app_name
+  install_archive_binary "lazygit" "jesseduffield/lazygit" "lazygit_*_Linux_x86_64.tar.gz" "lazygit"
 }
 
-# install packages
-install_zsh
-install_miniconda
-install_neovim
-install_direnv
-install_fzf
-install_lazydocker
-install_lazygit
+main() {
+  require_command curl
+  require_command python3
+  require_command tar
+  ensure_directories
+  warn_manual_prerequisites
+  install_miniconda
+  install_neovim
+  install_direnv
+  install_fzf
+  install_lazydocker
+  install_lazygit
+}
+
+main "$@"
