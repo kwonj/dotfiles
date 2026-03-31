@@ -5,7 +5,6 @@ set -euo pipefail
 APP_DIR="${HOME}/.local"
 BIN_DIR="${APP_DIR}/bin"
 CELLAR_DIR="${APP_DIR}/cellar"
-MINICONDA_DIR="${HOME}/.miniconda"
 
 log() {
   printf '%s\n' "$*"
@@ -28,9 +27,69 @@ ensure_directories() {
   mkdir -p "${BIN_DIR}" "${CELLAR_DIR}"
 }
 
-warn_manual_prerequisites() {
-  command -v zsh >/dev/null 2>&1 || warn "zsh is not installed; install it manually before using these dotfiles as your login shell"
-  command -v tmux >/dev/null 2>&1 || warn "tmux is not installed; install it manually if you want terminal multiplexer support"
+package_manager_prefix() {
+  if command -v sudo >/dev/null 2>&1; then
+    printf 'sudo'
+    return
+  fi
+
+  printf ''
+}
+
+install_with_package_manager() {
+  local package="$1"
+  local prefix
+
+  prefix="$(package_manager_prefix)"
+
+  if command -v apt-get >/dev/null 2>&1; then
+    if [ -n "${prefix}" ]; then
+      ${prefix} apt-get update
+      ${prefix} apt-get install -y "${package}"
+    else
+      apt-get update
+      apt-get install -y "${package}"
+    fi
+    return
+  fi
+
+  if command -v dnf >/dev/null 2>&1; then
+    if [ -n "${prefix}" ]; then
+      ${prefix} dnf install -y "${package}"
+    else
+      dnf install -y "${package}"
+    fi
+    return
+  fi
+
+  if command -v yum >/dev/null 2>&1; then
+    if [ -n "${prefix}" ]; then
+      ${prefix} yum install -y "${package}"
+    else
+      yum install -y "${package}"
+    fi
+    return
+  fi
+
+  if command -v brew >/dev/null 2>&1; then
+    brew install "${package}"
+    return
+  fi
+
+  die "could not install ${package}: no supported package manager found"
+}
+
+ensure_system_package() {
+  local package="$1"
+  local command_name="${2:-$1}"
+
+  if command -v "${command_name}" >/dev/null 2>&1; then
+    log "${package} is already installed"
+    return
+  fi
+
+  log "Installing ${package}"
+  install_with_package_manager "${package}"
 }
 
 latest_release_asset_url() {
@@ -117,26 +176,6 @@ install_standalone_binary() {
   rm -rf "${temp_dir}"
 }
 
-install_miniconda() {
-  local installer_url
-  local temp_dir
-
-  if [ -d "${HOME}/.miniconda3" ]; then
-    warn "found ~/.miniconda3; rename it to ~/.miniconda or install Miniconda manually"
-    return
-  fi
-
-  if [ -d "${MINICONDA_DIR}" ]; then
-    log "Miniconda is already installed"
-    return
-  fi
-
-  installer_url="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
-  temp_dir="$(download_to_temp "${installer_url}" "miniconda.sh")"
-  bash "${temp_dir}/miniconda.sh" -b -p "${MINICONDA_DIR}"
-  rm -rf "${temp_dir}"
-}
-
 install_neovim() {
   install_archive_binary "nvim" "neovim/neovim" "nvim-linux64.tar.gz" "nvim-linux64/bin/nvim"
 }
@@ -162,8 +201,8 @@ main() {
   require_command python3
   require_command tar
   ensure_directories
-  warn_manual_prerequisites
-  install_miniconda
+  ensure_system_package "zsh"
+  ensure_system_package "tmux"
   install_neovim
   install_direnv
   install_fzf

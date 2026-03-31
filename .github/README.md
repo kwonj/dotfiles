@@ -21,6 +21,8 @@ Bootstrap a new machine with:
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/kwonj/dotfiles/master/.scripts/install.sh)"
 ```
 
+The Git clone step uses SSH, so the target machine needs GitHub SSH access.
+
 The installer:
 
 - clones the bare repository into `~/.dotfiles`
@@ -52,6 +54,12 @@ dotgit push origin main
 
 Track files that are reproducible shell/editor/package-manager configuration.
 
+For Homebrew packages:
+
+- `brewfile` is the common baseline
+- `brewfile_personal` is for personal-machine-only software
+- `brewfile_personal` is only installed when `INSTALL_PERSONAL_BREWFILE=1` is set
+
 Keep these out of the repository:
 
 - secrets and personal overrides such as `~/.gitconfig.private`
@@ -63,4 +71,5 @@ Keep these out of the repository:
 - When Nerd Font is missing, run `p10k configure`.
 - The repository uses `status.showUntrackedFiles = no` locally to avoid showing
   the rest of the home directory as noise.
-- Linux bootstrap focuses on user-space installs under `~/.local`.
+- Linux bootstrap installs `zsh` and `tmux` with an available package manager,
+  and installs standalone tools under `~/.local`.

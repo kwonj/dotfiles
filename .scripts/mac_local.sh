@@ -3,7 +3,8 @@
 set -euo pipefail
 
 BREWFILE="${HOME}/.scripts/brewfile"
-BREWFILE_LOCAL="${HOME}/.scripts/brewfile_local"
+BREWFILE_PERSONAL="${HOME}/.scripts/brewfile_personal"
+INSTALL_PERSONAL_BREWFILE="${INSTALL_PERSONAL_BREWFILE:-0}"
 
 log() {
   printf '%s\n' "$*"
@@ -66,7 +67,11 @@ main() {
   install_homebrew
   load_homebrew_environment
   run_bundle "${BREWFILE}"
-  run_bundle "${BREWFILE_LOCAL}"
+  if [ "${INSTALL_PERSONAL_BREWFILE}" = "1" ]; then
+    run_bundle "${BREWFILE_PERSONAL}"
+  else
+    log "Skipping ${BREWFILE_PERSONAL}; set INSTALL_PERSONAL_BREWFILE=1 to install personal packages"
+  fi
   install_fzf_shell_integration
 }
 

@@ -21,15 +21,16 @@ macOS package bootstrap.
 
 - installs Homebrew if missing
 - installs packages from `brewfile`
-- optionally installs packages from `brewfile_local`
+- installs packages from `brewfile_personal` only when `INSTALL_PERSONAL_BREWFILE=1`
+- `brewfile_personal` is intended for personal machines and is skipped by default
 - runs the `fzf` post-install step when needed
 
 ### `linux_local.sh`
 
-Linux user-space bootstrap.
+Linux bootstrap.
 
+- installs `zsh` and `tmux` with a supported package manager
 - installs tools under `~/.local`
-- installs Miniconda under `~/.miniconda`
 - downloads standalone binaries from GitHub releases when practical
 - does not assume root access
-- does not manage `zsh` or `tmux` automatically; it reports them as manual prerequisites
+- no longer installs Miniconda

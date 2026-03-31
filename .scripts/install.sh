@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-DOTFILES_REPO_URL="https://github.com/kwonj/dotfiles.git"
+DOTFILES_REPO_URL="git@github.com:kwonj/dotfiles.git"
 DOTFILES_PATH="${HOME}/.dotfiles"
 DOTFILES_BACKUP_ROOT="${HOME}/.dotfiles.backup"
 PRIVATE_GITCONFIG_PATH="${HOME}/.gitconfig.private"
@@ -139,13 +139,13 @@ install_shell_plugins() {
 
   zsh_custom="${ZSH_CUSTOM:-${HOME}/.oh-my-zsh/custom}"
   install_plugin_repo \
-    "https://github.com/romkatv/powerlevel10k.git" \
+    "git@github.com:romkatv/powerlevel10k.git" \
     "${zsh_custom}/themes/powerlevel10k"
   install_plugin_repo \
-    "https://github.com/zsh-users/zsh-autosuggestions" \
+    "git@github.com:zsh-users/zsh-autosuggestions.git" \
     "${zsh_custom}/plugins/zsh-autosuggestions"
   install_plugin_repo \
-    "https://github.com/zsh-users/zsh-syntax-highlighting.git" \
+    "git@github.com:zsh-users/zsh-syntax-highlighting.git" \
     "${zsh_custom}/plugins/zsh-syntax-highlighting"
 }
 
